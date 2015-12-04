@@ -1,0 +1,51 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  if ENV['USE_PROXY']
+    proxy = YAML.load_file("#{Dir.home}/.vagrant.d/proxy.yaml")
+    config.proxy.http    = proxy["proxy"]["http"]
+    config.proxy.https   = proxy["proxy"]["https"]
+    config.proxy.no_proxy = proxy["proxy"]["no_proxy"]
+  end
+
+  config.vm.define "redmine-on-centos-7"
+  config.vm.box = "http://knowledgedatabase.info/boxes/centos-7.1-x86_64.box"
+  config.vm.hostname = "redmine-on-centos-7"
+  config.vm.synced_folder "./share", "/vagrant", mount_options: ["dmode=755", "fmode=755"]
+  config.vm.network :private_network, ip:"192.168.56.15"
+
+  config.vm.provider :virtualbox do |v, override|
+    v.customize ["modifyvm", :id, "--memory", 2 * 1024]
+    v.customize ["modifyvm", :id, "--cpus", "2"]
+  end
+
+  $script = <<-SCRIPT
+#    yum -y update
+#    sed -i 's/^/#/g' /etc/sysconfig/i18n
+#    echo 'LANG="ja_JP.utf8"' >> /etc/sysconfig/i18n
+    curl -L http://ftp-srv2.kddilabs.jp/Linux/distributions/fedora/epel/7/x86_64/e/epel-release-7-5.noarch.rpm -o epel-release-7-5.noarch.rpm
+		rpm -ivh epel-release-7-5.noarch.rpm
+		rm epel-release-7-5.noarch.rpm
+    yum -y groupinstall "development tools"
+    firewall-cmd --zone=public --add-service=http --permanent
+    firewall-cmd --reload
+    sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/sysconfig/selinux
+    setenforce 0
+    yum -y install openssl-devel readline-devel zlib-devel curl-devel libyaml-devel libffi-devel
+    yum -y install mariadb-server mariadb-devel
+    yum -y install httpd httpd-devel
+    yum -y install ImageMagick ImageMagick-devel ipa-pgothic-fonts
+    yum clean all
+  SCRIPT
+
+  config.vm.provision :shell do |s|
+    s.inline = $script
+  end
+
+end

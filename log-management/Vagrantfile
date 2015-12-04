@@ -1,0 +1,21 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.define "log-management"
+  config.vm.box = "ubuntu-14.04-server-amd64"
+  config.vm.hostname = "t9lsrvlog"
+  config.vm.synced_folder "./share", "/vagrant", mount_options: ["dmode=755", "fmode=755"]
+  config.vm.network :private_network, ip:"192.168.56.15"
+
+  config.vm.provider :virtualbox do |v, override|
+    v.customize ["modifyvm", :id, "--memory", 2 * 1024]
+    v.customize ["modifyvm", :id, "--cpus", "2"]
+  end
+
+end
