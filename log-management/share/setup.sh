@@ -34,4 +34,6 @@ fi
 
 pip install ansible
 
-sudo apt-get install -y libssl1.0.0
+sudo apt-get install -y mysql-server-5.6
+sudo apt-get install -y libmysqlclient-dev
+sudo td-agent-gem install fluent-plugin-mysql
