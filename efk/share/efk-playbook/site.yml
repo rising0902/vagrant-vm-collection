@@ -1,6 +1,14 @@
-- name: generate agent.
+- name: generate agent
   connection: local
   hosts: agent
   sudo: yes
   roles:
     - td-agent
+
+- name: generate server
+  connection: local
+  hosts: server
+  sudo: yes
+  roles:
+    - td-agent
+    - java
