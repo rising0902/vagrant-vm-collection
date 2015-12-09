@@ -37,3 +37,14 @@ pip install ansible
 sudo apt-get install -y mysql-server-5.6
 sudo apt-get install -y libmysqlclient-dev
 sudo td-agent-gem install fluent-plugin-mysql
+
+curl --create-dirs -o ~/.embulk/bin/embulk -L "http://dl.embulk.org/embulk-latest.jar"
+chmod +x ~/.embulk/bin/embulk
+echo 'export PATH="$HOME/.embulk/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+sudo apt-get install postgresql
+
+embulk gem install embulk-input-postgresql
+embulk gem install embulk-output-mysql
+

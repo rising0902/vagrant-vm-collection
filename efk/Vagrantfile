@@ -1,0 +1,65 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.box = "ubuntu-14.04-server-amd64"
+  config.vm.synced_folder "./share", "/vagrant", mount_options: ["dmode=755", "fmode=755"]
+
+  config.vm.provider :virtualbox do |v, override|
+    v.customize ["modifyvm", :id, "--memory", 2 * 1024]
+    v.customize ["modifyvm", :id, "--cpus", "2"]
+  end
+
+  $script = <<-SCRIPT
+  apt-get update -y
+  if [ -z `which git` ]; then
+    echo " [step 1] : git is installing..."
+    sudo apt-get install -y git
+  else
+    echo " [step 1] : git is already installed."
+  fi
+  if [ -z `which pyenv` ]; then
+    echo " [step 2] : pyenv is installing..."
+    sudo -H -u vagrant -i sh -c "git clone https://github.com/yyuu/pyenv.git ~/.pyenv"
+    sudo -H -u vagrant -i sh -c "git clone https://github.com/yyuu/pyenv-pip-rehash.git ~/.pyenv/plugins/pyenv-pip-rehash"
+    sudo -H -u vagrant -i sh -c "echo 'export PYENV_ROOT=\\${HOME}/.pyenv' >> ~/.bashrc"
+    sudo -H -u vagrant -i sh -c "echo 'export PATH=\\${PYENV_ROOT}/bin:\\${PATH}' >> ~/.bashrc"
+    sudo -H -u vagrant -i sh -c "echo 'eval \\"\\$(pyenv init -)\\"' >> ~/.bashrc"
+    sudo apt-get install -y libreadline6-dev
+    sudo apt-get install -y zlib1g
+    sudo apt-get install -y zlib1g-dev
+    sudo apt-get install -y bzip2
+    sudo apt-get install -y libbz2-1.0 libbz2-dev
+    sudo apt-get install -y sqlite3
+    sudo apt-get install -y libsqlite3-0 libsqlite3-dev
+    sudo apt-get install -y openssl
+    sudo apt-get install -y libssl-dev
+    sudo apt-get install -y libssl1.0.0
+    sudo -H -u vagrant -i bash -c "~/.pyenv/bin/pyenv install 2.7.10"
+    sudo -H -u vagrant -s bash -c "~/.pyenv/bin/pyenv global 2.7.10"
+  else
+    echo " [step 2] : pyenv is already installed."
+  fi
+
+  sudo -H -u vagrant -i bash -c "~/.pyenv/shims/pip install ansible"
+  SCRIPT
+
+  config.vm.provision :shell do |s|
+    s.inline = $script
+  end
+
+  config.vm.define :agent do | agent |
+    agent.vm.hostname = "agent"
+    agent.vm.network :private_network, ip: "192.168.56.15", virtualbox__intnet: "intnet"
+  end
+
+  config.vm.define :server do | server |
+    server.vm.hostname = "server"
+    server.vm.network :private_network, ip: "192.168.56.16", virtualbox__intnet: "intnet"
+  end
+end

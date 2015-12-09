@@ -1,0 +1,6 @@
+- name: generate agent.
+  connection: local
+  hosts: agent
+  sudo: yes
+  roles:
+    - td-agent

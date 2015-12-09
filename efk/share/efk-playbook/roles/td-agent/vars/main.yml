@@ -1,0 +1,24 @@
+---
+td_agent:
+  plugins:
+    - { name: 'fluent-plugin-elasticsearch' }
+    - { name: 'fluent-plugin-s3' }
+  position_path: /var/log/td-agent/position
+  aggregator:
+    ipaddr: 192.168.56.16
+    port: 24224
+
+kernel:
+  - { param: 'net.ipv4.tcp_tw_recycle', value: '1' }
+  - { param: 'net.ipv4.tcp_tw_reuse', value: '1' }
+  - { param: 'net.ipv4.ip_local_port_range', value: '"10240 65535"' }
+
+limits_configs:
+  - regexp: root soft nofile 65536
+    line: root soft nofile 65536
+  - regexp: root hard nofile 65536
+    line: root hard nofile 65536
+  - regexp: '\* soft nofile 65536'
+    line: '* soft nofile 65536'
+  - regexp: '\* hard nofile 65536'
+    line: '* hard nofile 65536'

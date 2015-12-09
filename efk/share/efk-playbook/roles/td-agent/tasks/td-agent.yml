@@ -1,0 +1,42 @@
+---
+- name: add an apt key
+  apt_key:
+    url: http://packages.treasuredata.com/GPG-KEY-td-agent
+
+- name: add repository into sources list
+  apt_repository:
+    repo: 'deb [arch=amd64] http://packages.treasuredata.com/2/ubuntu/trusty/ trusty contrib'
+    update_cache: yes
+
+- name: install the package "td-agent"
+  apt:
+    name: td-agent
+    update_cache: yes 
+    force: yes
+
+- name: Check plugins
+  command: "td-agent-gem list --local {{ item.name }}"
+  with_items: "{{ td_agent.plugins }}"
+  changed_when: False
+  failed_when: False
+  register: plugin_status
+
+- name: Install plugins
+  command: "td-agent-gem install {{ item.item.name }}"
+  with_items: plugin_status.results
+  when: plugin_status.results is defined and item.stdout[0] is undefined
+
+- name: td-agent template copy
+  template: >
+    src=td-agent.conf
+    dest=/etc/td-agent/td-agent.conf
+    backup=yes
+  notify: restart td-agent
+
+- name: create temp directory use posision
+  file: >
+    path={{ td_agent.position_path }}
+    state=directory
+    owner=td-agent
+    group=td-agent
+    mode=755

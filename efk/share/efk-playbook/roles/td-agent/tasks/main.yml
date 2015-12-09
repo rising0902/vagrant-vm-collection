@@ -1,0 +1,4 @@
+---
+- include: td-agent.yml tags=td-agent
+- include: kernel.yml tags=kernel
+- include: limits.yml tags=limits

@@ -1,0 +1,13 @@
+in: {type: postgresql, host: 127.0.0.1, user: fulentd, password: fulentd, database: fulentd,
+  table: users, select: '*'}
+out:
+  type: mysql
+  host: 127.0.0.1
+  user: fulentd
+  password: fulentd
+  database: fulentd
+  table: users
+  mode: insert
+  column_options:
+    last_update: {type: datetime}
+    closed_account_time: {type: datetime}
