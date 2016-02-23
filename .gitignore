@@ -1,2 +1,5 @@
 *test/
 .vagrant/
+.env
+.rspec
+Gemfile.lock

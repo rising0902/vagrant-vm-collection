@@ -1,0 +1,7 @@
+- name: Setup Jenkins Server
+  hosts: server1
+  sudo: true
+  user: ec2-user
+  roles:
+    - nginx
+    - jenkins
