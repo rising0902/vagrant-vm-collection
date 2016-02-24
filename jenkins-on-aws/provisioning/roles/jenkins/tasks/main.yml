@@ -46,7 +46,7 @@
     action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 safe-restart
 
   - name: Template nginx/conf.d/jenkins.conf
-    template: src=nginx_jenkins.conf.j2 dest=/etc/nginx/conf.d/jenkins.conf mode=0644
+    template: src=nginx_jenkins.conf.j2 dest=/etc/nginx/conf.d/jenkins.conf mode=0644 force=yes
 
   - name: restart nginx
     service: name=nginx state=restarted
