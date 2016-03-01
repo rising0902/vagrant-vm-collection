@@ -1,0 +1,39 @@
+---
+# DRBD
+
+- name: add pgp key
+  rpm_key: state=present key=https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+
+- name: install the elrepo rpm from a remote repo
+  yum: name=http://www.elrepo.org/elrepo-release-6-6.el6.elrepo.noarch.rpm state=present
+
+- name: install drbd
+  yum: pkg={{ item }} state=installed
+  with_items:
+    - libselinux-python
+    - drbd84-utils
+    - kmod-drbd84
+
+- name: drbd.conf
+  template: src=drbd.conf dest=/etc/drbd.conf force=yes
+
+- name: config service
+  service: name=drbd state=started enabled=no
+
+- name: check
+  action: command drbdadm dump-md r0
+  register: result
+  ignore_errors: True
+
+- name: initialize meta data
+  action: command drbdadm create-md r0
+  action: command drbdadm -- 6::::1 set-gi r0
+  when: result|failed
+#  action: shell drbdadm dump-md r0 > /tmp/md
+#  action: command sed -i -r -e 's/0xF{16}/0x0000000000000000/g' /tmp/md
+#  action: command drbdmeta /dev/drbd0 v08 /dev/mapper/VolGroup2-lv_data internal restore-md /tmp/md
+#  when: result|failed
+
+- name: start drbd
+  service: name=drbd state=started
+

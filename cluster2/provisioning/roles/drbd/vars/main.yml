@@ -1,0 +1,5 @@
+server1_ip_address: 192.168.56.30
+server2_ip_address: 192.168.56.31
+
+drbd_port: 7788
+

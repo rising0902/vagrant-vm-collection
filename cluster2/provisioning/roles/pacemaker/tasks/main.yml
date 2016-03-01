@@ -1,0 +1,14 @@
+---
+# Pacemaker
+
+- name: install repo
+  yum: name=http://iij.dl.sourceforge.jp/linux-ha/63919/pacemaker-repo-1.1.13-1.1.el6.x86_64.rpm state=present
+
+- name: install pacemaker
+  yum: pkg={{ item }} state=installed
+  with_items:
+    - pacemaker-all
+
+- name: config corosync
+  template: src=corosync.conf dest=/etc/corosync/corosync.conf force=yes
+

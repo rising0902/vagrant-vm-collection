@@ -1,0 +1,5 @@
+---
+# LVM
+- lvg: vg=VolGroup2 pvs=/dev/sdb state=present
+
+- lvol: vg=VolGroup2 lv=lv_data size=25g state=present

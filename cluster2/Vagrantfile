@@ -1,0 +1,62 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Dotenv.load
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.box = "centos-6.6-x86_64"
+  config.vm.synced_folder "./provisioning", "/vagrant", mount_options: ["dmode=755", "fmode=755"]
+
+  config.vm.define :server1 do |server1|
+    additional_disk = "./vm/server1/additional_disk.vmdk"
+    server1.vm.hostname = "server1"
+    server1.vm.network :private_network, ip:"192.168.56.30"
+    server1.vm.provider :virtualbox do |v, override|
+      v.customize ["modifyvm", :id, "--memory", 1024]
+      v.customize ["modifyvm", :id, "--cpus", "1"]
+      if not File.exist?(additional_disk) then
+        v.customize ["createhd",
+                     "--filename", additional_disk,
+                     "--format", "VMDK",
+                     "--variant", "Standard",
+                     "--size", 50 * 1024]
+      end
+      v.customize ['storageattach', :id,
+        '--storagectl', 'SATA Controller',
+        '--port', 1,
+        '--device', 0,
+        '--type', 'hdd',
+        '--medium', additional_disk]
+    end
+  end 
+
+  config.vm.define :server2 do |server2|
+    additional_disk = "./vm/server2/additional_disk.vmdk"
+    server2.vm.hostname = "server2"
+    server2.vm.network :private_network, ip:"192.168.56.31"
+    server2.vm.provider :virtualbox do |v, override|
+      v.customize ["modifyvm", :id, "--memory", 1024]
+      v.customize ["modifyvm", :id, "--cpus", "1"]
+      if not File.exist?(additional_disk) then
+        v.customize ["createhd",
+                     "--filename", additional_disk,
+                     "--format", "VMDK",
+                     "--variant", "Standard",
+                     "--size", 50 * 1024]
+      end
+      v.customize ['storageattach', :id,
+        '--storagectl', 'SATA Controller',
+        '--port', 1,
+        '--device', 0,
+        '--type', 'hdd',
+        '--medium', additional_disk]
+    end
+  end 
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "provisioning/site.yml"
+  end
+end
