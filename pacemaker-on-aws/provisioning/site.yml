@@ -1,0 +1,13 @@
+- name: Setup Pacemaker server1
+  hosts: server1
+  sudo: true
+  user: ubuntu
+  roles:
+    - pacemaker
+
+- name: Setup Pacemaker server2
+  hosts: server2
+  sudo: true
+  user: ubuntu
+  roles:
+    - pacemaker

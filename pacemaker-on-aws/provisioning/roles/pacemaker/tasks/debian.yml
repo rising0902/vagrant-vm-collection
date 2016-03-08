@@ -1,0 +1,66 @@
+---
+# for debian or ubuntu
+
+#- name: debug
+#  debug: var=hostvars
+
+- name: retrieve new lists of packages
+  apt: update_cache=yes
+
+- name: install packages 
+  apt: name=pacemaker state=present
+  apt: name=haveged state=present
+
+- name: check /etc/corosync/authkey exist
+  stat: path=/etc/corosync/authkey
+  register: remote
+
+- name: check local file
+  stat: path=/tmp/server1/etc/corosync/authkey
+  register: local
+  delegate_to: 127.0.0.1
+  sudo: no
+
+- name: upload authkey
+  copy: src=/tmp/server1/etc/corosync/authkey dest=/etc/corosync/authkey
+  when: remote.stat.exists == False and local.stat.exists == True
+
+- name: create authkey
+  action: command corosync-keygen
+  when: remote.stat.exists == False and local.stat.exists == False
+
+- name: download authkey
+  fetch: src=/etc/corosync/authkey dest=/tmp fail_on_missing=yes
+  when: remote.stat.exists == True and local.stat.exists == False 
+
+#- name: download authkey
+#  local_action: command scp -i {{ ansible_ssh_private_key_file }} ubuntu@{{ ansible_ssh_host }}:/tmp/authkey /tmp/authkey
+#  sudo: no
+#  when: remote.stat.exists == True and local.stat.exists == False 
+
+- name: configure corosync cluster
+  template: src=corosync.conf dest=/etc/corosync/corosync.conf force=yes
+
+- name: configure pcmk
+  template: src=pcmk dest=/etc/corosync/service.d/pcmk force=yes
+
+- name: change the value of start to yes 
+  replace: dest=/etc/default/corosync regexp='no' replace='yes'
+
+- name: start corosync
+  service: name=corosync state=started
+
+- name: enable pacemaker on system boot
+  service: name=pacemaker state=started
+
+#- name: dump network information
+#  action: shell /sbin/ifconfig eth0 > /tmp/server1.txt
+#
+#- name: get network information
+#  sudo: no
+#  local_action: command scp -i ~/Operations/cic/cic-hatano-dev.pem ubuntu@{{ ansible_ssh_host }}:/tmp/server1.txt /tmp
+#  local_action: command ssh -i ~/Operations/cic/cic-hatano-dev.pem ubuntu@{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}:/tmp/server1.txt /tmp
+#  local_action: command ssh -i ~/Operations/cic/cic-hatano-dev.pem ubuntu@{{ ansible_eth0.ipv4.address }}:/tmp/server1.txt /tmp
+#  sudo: no
+
+
