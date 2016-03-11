@@ -1,0 +1,113 @@
+---
+# gitlab
+
+- name: retrieve new lists of packages
+  apt: update_cache=yes
+
+- name: set as default vim editor
+  alternatives: name=editor path=/usr/bin/vim.basic
+
+- name: install package
+  apt: name={{ item }} state=present
+  with_items:
+    - build-essential
+    - zlib1g-dev
+    - libyaml-dev
+    - libssl-dev
+    - libgdbm-dev
+    - libreadline-dev
+    - libncurses5-dev
+    - libffi-dev
+    - curl
+    - openssh-server
+    - checkinstall
+    - libxml2-dev
+    - libxslt-dev
+    - libcurl4-openssl-dev
+    - libicu-dev
+    - logrotate
+    - python-docutils
+    - pkg-config
+    - cmake
+    - nodejs
+
+- name: install git-core
+  apt: name=git-core state=present
+
+- name: check ruby
+  stat: path=/usr/local/bin/ruby
+  register: ruby_stat
+
+- name: download ruby source
+  get_url: url=https://cache.ruby-lang.org/pub/ruby/2.1/ruby-2.1.8.tar.gz dest=/usr/local/src
+  when: ruby_stat.stat.md5 is not defined
+
+- name: unarchive
+  unarchive: src=/usr/local/src/ruby-2.1.8.tar.gz dest=/usr/local/src creates=/usr/local/src/ruby-2.1.8 copy=no
+  when: ruby_stat.stat.md5 is not defined
+
+- name: build ruby
+  shell: >
+    ./configure --disable-install-rdoc --with-opt-dir=/usr/local --enable-shared --enable-option-checking &&
+    make &&
+    make install
+    chdir=/usr/local/src/ruby-2.1.8
+    creates=/usr/local/bin/ruby
+  when: ruby_stat.stat.md5 is not defined
+
+- name: modify path environment on sudo
+  replace: >
+    dest=/etc/sudoers
+    regexp="^Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin$"
+    replace="Defaults    secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin"
+  when: ruby_stat.stat.md5 is not defined
+
+- name: install bundler
+  gem: name=bundler state=present user_install=no
+
+- name: check go
+  stat: path=/usr/local/bin/go
+  register: go_stat
+
+- name: download go source
+  get_url: url=https://storage.googleapis.com/golang/go1.5.3.linux-amd64.tar.gz dest=/usr/local/src
+  when: go_stat.stat.md5 is not defined
+
+- name: unarchive go
+  unarchive: src=/usr/local/src/go1.5.3.linux-amd64.tar.gz dest=/usr/local creates=/usr/local/go copy=no
+  when: go_stat.stat.md5 is not defined
+
+- name: build go
+  file: src=/usr/local/go/bin/{{ item }} dest=/usr/local/bin/{{ item }} state=link
+  with_items:
+    - go
+    - godoc
+    - gofmt
+  when: go_stat.stat.md5 is not defined
+
+- name: create user
+  user: name=git system=yes comment=GitLab
+
+- name: install postgresql
+  apt: name={{ item }} state=present
+  with_items:
+    - postgresql
+    - postgresql-client
+    - libpq-dev
+    - python-psycopg2
+
+- name: create postgresql user
+  postgresql_user: name=git role_attr_flags=CREATEDB
+  sudo_user: postgres
+
+- name: create database
+  postgresql_db: name=gitlabhq_production encoding='UTF-8' owner=git state=present
+  sudo_user: postgres
+
+- name: install redis
+  apt: name=redis-server state=present
+
+
+
+
+

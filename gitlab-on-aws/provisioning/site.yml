@@ -1,0 +1,6 @@
+- name: Setup Gitlab Server
+  hosts: server1
+  sudo: true
+  user: ubuntu
+  roles:
+    - gitlab

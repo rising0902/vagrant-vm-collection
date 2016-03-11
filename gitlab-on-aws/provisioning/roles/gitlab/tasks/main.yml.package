@@ -1,0 +1,21 @@
+---
+# gitlab
+
+- name: add key
+  apt_key: url=https://packages.gitlab.com/gpg.key state=present
+
+- name: retrieve new lists of packages
+  apt: update_cache=yes
+
+- name: Install a package called apt-transport-https
+  apt: name=apt-transport-https state=present
+
+- name: add repository
+  apt_repository: repo='deb https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu/ trusty main' state=present
+
+- name: add source repository
+  apt_repository: repo='deb-src https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu/ trusty main' state=present
+
+- name: install gitlab
+  apt: name=gitlab-ce state=present
+
