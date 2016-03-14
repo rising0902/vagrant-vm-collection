@@ -97,7 +97,7 @@
     - python-psycopg2
 
 - name: create postgresql user
-  postgresql_user: name=git role_attr_flags=CREATEDB
+  postgresql_user: name=git role_attr_flags=CREATEDB encrypted=no password=git
   sudo_user: postgres
 
 - name: create database
@@ -192,7 +192,23 @@
   shell: chdir=/home/git/gitlab-workhorse make
   sudo_user: git
 
-- name: initialize database
-  shell: chdir=/home/git/gitlab bundle exec rake gitlab:setup RAILS_ENV=production GITLAB_ROOT_PASSWORD=gitlab GITLAB_ROOT_EMAIL=gitlab@test.com
+#- name: initialize database
+#  shell: chdir=/home/git/gitlab bundle exec rake gitlab:setup force=yes RAILS_ENV=production
+#  sudo_user: git
+
+- name: create rc script
+  shell: creates=/ect/init.d/gitlab cp /home/git/gitlab/lib/support/init.d/gitlab /etc/init.d/gitlab
+
+- name: make gitLab start on boot
+  shell: update-rc.d gitlab defaults 21
+
+- name: setup logroate 
+  shell: creates=/etc/logrotate.d/gitlab cp /home/git/gitlab/lib/support/logrotate/gitlab /etc/logrotate.d/gitlab
+
+- name: compile assets
+  shell: chdir=/home/git/gitlab bundle exec rake assets:precompile RAILS_ENV=production
   sudo_user: git
+
+- name: start gitalb instance
+  service: name=gitlab state=started
 

@@ -4,3 +4,5 @@
   user: ubuntu
   roles:
     - gitlab
+    - nginx
+

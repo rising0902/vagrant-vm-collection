@@ -1,0 +1,16 @@
+---
+# nginx
+
+- name: install nginx
+  apt: name=nginx state=present
+
+- name: setup configuration
+  shell: creates=/etc/nginx/sites-available/gitlab cp /home/git/gitlab/lib/support/nginx/gitlab /etc/nginx/sites-available/gitlab
+
+- name: enable configuration
+  file: src=/etc/nginx/sites-available/gitlab dest=/etc/nginx/sites-enabled/gitlab state=link
+
+- name: start nginx
+  service: name=nginx state=started
+
+
