@@ -140,6 +140,9 @@
 - name: create gitlab.yml
   shell: creates=/home/git/gitlab/config/gitlab.yml cp /home/git/gitlab/config/gitlab.yml.example /home/git/gitlab/config/gitlab.yml
 
+- name: set fqdn
+  replace: "dest=/home/git/gitlab/config/gitlab.yml regexp='^\\s*host: localhost' replace='host: {{ fqdn }}'"
+
 - name: modify mode
   file: path=/home/git/gitlab/config/gitlab.yml owner=git group=git mode=0644
 
@@ -171,6 +174,7 @@
 - name: check
   shell: chdir=/home/git/gitlab bundle check
   register: result
+  ignore_errors: True
   sudo_user: git
 
 - name: install gems
