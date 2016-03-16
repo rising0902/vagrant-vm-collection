@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Dotenv.load
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.box = "ubuntu-14.04-server-amd64"
+  config.vm.synced_folder "./provisioning", "/provisioning", mount_options: ["dmode=755", "fmode=755"]
+
+  config.vm.define :manager do |manager|
+    manager.vm.hostname = "manager"
+    manager.vm.network :private_network, ip:"192.168.56.30"
+    manager.vm.provider :virtualbox do |v, override|
+      v.customize ["modifyvm", :id, "--memory", 1024]
+      v.customize ["modifyvm", :id, "--cpus", "1"]
+    end
+  end 
+
+  config.vm.define :agent do |agent|
+    agent.vm.hostname = "agent"
+    agent.vm.network :private_network, ip:"192.168.56.31"
+    agent.vm.provider :virtualbox do |v, override|
+      v.customize ["modifyvm", :id, "--memory", 1024]
+      v.customize ["modifyvm", :id, "--cpus", "1"]
+  end 
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "provisioning/site.yml"
+  end
+end

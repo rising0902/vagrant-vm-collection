@@ -1,0 +1,8 @@
+---
+td_agent:
+  plugins:
+    - { name: 'fluent-plugin-elasticsearch' }
+    - { name: 'fluent-plugin-s3' }
+  position_path: /var/log/td-agent/position
+  port: 24224
+  bindaddress: 0.0.0.0

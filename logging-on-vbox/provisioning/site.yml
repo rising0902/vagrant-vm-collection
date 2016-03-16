@@ -1,0 +1,12 @@
+- name: Setup Logging Manager
+  hosts: manager
+  sudo: true
+  roles:
+    - td-agent
+
+- name: Setup Logging Agent
+  hosts: agent
+  sudo: true
+  roles:
+    - td-agent
+
