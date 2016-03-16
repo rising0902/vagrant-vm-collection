@@ -141,7 +141,7 @@
   shell: creates=/home/git/gitlab/config/gitlab.yml cp /home/git/gitlab/config/gitlab.yml.example /home/git/gitlab/config/gitlab.yml
 
 - name: set fqdn
-  replace: "dest=/home/git/gitlab/config/gitlab.yml regexp='^\\s*host: localhost' replace='host: {{ fqdn }}'"
+  replace: "dest=/home/git/gitlab/config/gitlab.yml regexp='^\\s*host: localhost' replace='    host: {{ fqdn }}'"
 
 - name: modify mode
   file: path=/home/git/gitlab/config/gitlab.yml owner=git group=git mode=0644
@@ -196,9 +196,9 @@
   shell: chdir=/home/git/gitlab-workhorse make
   sudo_user: git
 
-#- name: initialize database
-#  shell: chdir=/home/git/gitlab bundle exec rake gitlab:setup force=yes RAILS_ENV=production
-#  sudo_user: git
+- name: initialize database
+  shell: chdir=/home/git/gitlab bundle exec rake gitlab:setup force=yes RAILS_ENV=production
+  sudo_user: git
 
 - name: create rc script
   shell: creates=/ect/init.d/gitlab cp /home/git/gitlab/lib/support/init.d/gitlab /etc/init.d/gitlab

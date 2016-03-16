@@ -10,7 +10,12 @@
 - name: enable configuration
   file: src=/etc/nginx/sites-available/gitlab dest=/etc/nginx/sites-enabled/gitlab state=link
 
-- name: start nginx
-  service: name=nginx state=started
+- name: remote default configuration
+  file: path=/etc/nginx/sites-enabled/default state=absent
 
+- name: set fqdn
+  lineinfile: "dest=/etc/nginx/sites-available/gitlab regexp='^\\s*proxy_pass http://gitlab-workhorse;' line='    proxy_pass http://127.0.0.1:8080;'"
+
+- name: start nginx
+  service: name=nginx state=restarted
 
