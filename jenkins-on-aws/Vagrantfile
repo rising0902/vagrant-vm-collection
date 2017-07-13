@@ -17,6 +17,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   aws_keypair_name = ENV['AWS_KEYPAIR_NAME']
   aws_security_group = ENV['AWS_SECURITY_GROUP']
   aws_subnet_id= ENV['AWS_SUBNET_ID']
+  aws_ami_id= ENV['AWS_AMI_ID']
+  user_data= ENV['USER_DATA']
 
   config.vm.box = "dummy"
   config.vm.box_url = "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box"
@@ -24,11 +26,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define :server1 do |server1|
     server1.vm.provider "aws" do |aws, override|
-      aws.ami = "ami-59bdb937"
+      aws.ami = aws_ami_id
       aws.tags = {
         'Name' => 'test',
       }
       aws.subnet_id = aws_subnet_id
+      aws.private_ip_address = '172.31.0.200'
+      aws.elastic_ip = true
       aws.associate_public_ip = true
       aws.instance_type = "t2.micro"
       aws.security_groups = aws_security_group
@@ -36,6 +40,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       aws.secret_access_key = aws_secret_access_key
       aws.region = "ap-northeast-1"
       aws.keypair_name = aws_keypair_name
+      aws.user_data = user_data
+
       override.ssh.username = aws_ssh_username
       override.ssh.private_key_path = aws_ssh_key
     end

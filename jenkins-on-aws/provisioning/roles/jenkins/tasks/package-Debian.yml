@@ -1,0 +1,20 @@
+---
+# setup package for Debian
+
+- name: ensure open JDK 1.8 is at the latest version
+  apt:
+    name: "{{ jdk_pkg_name }}"
+
+- name: set the Jenkins apt key
+  apt_key:
+    url: "{{ jenkins_repo_key_url }}"
+
+- name: set the Jenkins repository into sources list
+  apt_repository:
+    repo: "{{ jenkins_repo_url }}"
+    filename: 'jenkins.list'
+    update_cache: yes
+
+- name: ensure jenkins is at the latest version
+  apt:
+    name: jenkins

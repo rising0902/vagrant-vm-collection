@@ -1,52 +1,43 @@
 ---
 # jenkins
 
-  - name: ensure open JDK 1.7 is at the latest version
-    yum: name=java-1.7.0-openjdk state=latest
+- name: include variables
+  include_vars: "{{ ansible_os_family }}.yml"
 
-  - name: get the Jenkins repository
-    get_url: url=http://pkg.jenkins-ci.org/redhat/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo
+- name: install packages
+  include: package-RedHat.yml
+  when: "ansible_os_family == 'RedHat'"
 
-  - name: add the Jenkins repository
-    rpm_key: key=https://jenkins-ci.org/redhat/jenkins-ci.org.key
+- name: install packages
+  include: package-Debian.yml
+  when: "ansible_os_family == 'Debian'"
 
-  - name: ensure jenkins is at the latest version
-    yum: name=jenkins state=latest
+- name: ensure jenkins is running and enabled
+  service: name=jenkins state=started enabled=yes
 
-  - name: ensure jenkins is running and enabled
-    service: name=jenkins state=started enabled=yes
+- name: setting
+  include: setting.yml
 
-  - pause: minutes=3
+# - pause: minutes=1
 
-  - name: download jenkins cli tool
-    get_url: url=http://localhost:8080/jnlpJars/jenkins-cli.jar dest=/tmp
+- name: Get the jenkins-cli jarfile from the Jenkins server.
+  get_url:
+    url: "http://{{ jenkins_hostname }}:{{ jenkins_http_port }}{{ jenkins_url_prefix }}/jnlpJars/jenkins-cli.jar"
+    dest: "{{ jenkins_jar_location }}"
+  register: jarfile_get
+  until: "'OK' in jarfile_get.msg or 'file already exists' in jarfile_get.msg"
+  retries: 5
+  delay: 10
+  check_mode: no
 
-  - name: jenkins plugin install [build-pipeline-plugin]
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 install-plugin build-pipeline-plugin
 
-  - name: jenkins plugin install [timestamper]
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 install-plugin timestamper
+- name: Remove Jenkins security init scripts after first startup.
+  file:
+    path: "{{ jenkins_home }}/init.groovy.d/init-security.groovy"
+    state: absent
 
-  - name: jenkins plugin install [git]
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 install-plugin git
+- name: install plugins
+  include: plugins.yml
 
-  - name: jenkins plugin install [jobConfigHistory]
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 install-plugin jobConfigHistory
-
-  - name: jenkins plugin install [cron_column]
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 install-plugin cron_column
-
-  - name: jenkins plugin install [next-executions]
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 install-plugin next-executions
-
-  - name: jenkins plugin install [ssh]
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 install-plugin ssh
-
-  - name: jenkins restart
-    action: command java -jar /tmp/jenkins-cli.jar -s http://localhost:8080 safe-restart
-
-  - name: Template nginx/conf.d/jenkins.conf
-    template: src=nginx_jenkins.conf.j2 dest=/etc/nginx/conf.d/jenkins.conf mode=0644 force=yes
-
-  - name: restart nginx
-    service: name=nginx state=restarted
+- name: restart nginx
+  service: name=nginx state=restarted

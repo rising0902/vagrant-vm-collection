@@ -1,0 +1,32 @@
+---
+
+- name: Modify variables in init file
+  lineinfile:
+    dest: "{{ jenkins_init_file }}"
+    insertafter: '^{{ item.option }}='
+    regexp: '^{{ item.option}}=\"\${{ item.option }} '
+    line: '{{ item.option }}="${{ item.option }} {{ item.value }}"'
+    state: present
+  with_items:
+      "{{ jenkins_init_changes }}"
+  register: jenkins_init_prefix
+
+- name: Create custom init scripts directory.
+  file:
+    path: "{{ jenkins_home }}/init.groovy.d"
+    state: directory
+    owner: "{{ jenkins_process_user }}"
+    group: "{{ jenkins_process_group }}"
+    mode: 0775
+
+- name: configure default users
+  template:
+    src: init-security.groovy
+    dest: "{{ jenkins_home }}/init.groovy.d/init-security.groovy"
+    owner: "{{ jenkins_process_user }}"
+    group: "{{ jenkins_process_group }}"
+    mode: 0775
+  notify: restart jenkins
+
+- name: restart jenkins
+  service: name=jenkins state=restarted
